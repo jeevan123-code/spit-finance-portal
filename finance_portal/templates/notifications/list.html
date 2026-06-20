@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+{% from 'partials/icons.html' import icon %}
+{% block title %}Notifications{% endblock %}
+{% block heading %}Notifications{% endblock %}
+{% block topbar_action %}
+<form method="post" action="{{ url_for('notifications.read_all') }}">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <button class="btn btn-ghost btn-sm" type="submit">{{ icon('check') }} Mark all read</button>
+</form>
+{% endblock %}
+
+{% block content %}
+<div class="glass card reveal">
+  {% if notes %}
+  {% for n in notes %}
+  <a href="{{ url_for('notifications.open_note', note_id=n.id) }}" class="flex between" style="padding:14px 6px;border-bottom:1px solid var(--border);text-decoration:none;color:inherit;{{ 'opacity:.6' if n.read else '' }}">
+    <div class="flex" style="gap:14px">
+      <div class="ico {{ {'success':'green','danger':'amber','warning':'amber','info':'blue'}.get(n.category,'blue') }}" style="width:36px;height:36px;border-radius:10px;display:grid;place-items:center;flex:0 0 auto;{{ 'background:rgba(34,197,94,0.14);color:var(--accent)' if n.category=='success' else ('background:rgba(239,68,68,0.14);color:#fca5a5' if n.category=='danger' else 'background:rgba(56,189,248,0.14);color:var(--info)') }}">
+        {% if n.category == 'success' %}{{ icon('check') }}{% elif n.category == 'danger' %}{{ icon('x') }}{% else %}{{ icon('bell') }}{% endif %}
+      </div>
+      <div>
+        <b style="font-size:14px">{{ n.title }}</b>{% if not n.read %} <span class="chip" style="color:var(--accent)">New</span>{% endif %}
+        <div class="muted" style="font-size:12.5px">{{ n.body }}</div>
+      </div>
+    </div>
+    <span class="dim" style="font-size:11.5px;white-space:nowrap">{{ n.created_at|datefmt('%d %b · %I:%M %p') }}</span>
+  </a>
+  {% endfor %}
+  {% else %}<div class="empty">{{ icon('bell') }}<b>No notifications</b>You're all caught up.</div>{% endif %}
+</div>
+{% endblock %}

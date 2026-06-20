@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+{% from 'partials/icons.html' import icon %}
+{% block title %}{{ 'Edit' if mode == 'edit' else 'New' }} Event{% endblock %}
+{% block heading %}{{ 'Edit Event' if mode == 'edit' else 'New Event' }}{% endblock %}
+
+{% block content %}
+<div class="glass card interactive reveal" style="max-width:680px">
+  <form method="post">
+    {{ form.csrf_token }}
+    <div class="field">
+      <label>Event Name <span class="req">*</span></label>
+      <input class="input" name="name" required value="{{ form.name.data or '' }}" placeholder="e.g. Spectra 2026 — Annual Tech Fest">
+      {% for e in form.name.errors %}<div class="error-text">{{ e }}</div>{% endfor %}
+    </div>
+    <div class="form-grid">
+      <div class="field"><label>Committee</label>
+        <input class="input" name="committee_name" value="{{ form.committee_name.data or '' }}" placeholder="e.g. Technical Committee"></div>
+      <div class="field"><label>Venue</label>
+        <input class="input" name="venue" value="{{ form.venue.data or '' }}" placeholder="e.g. Main Auditorium"></div>
+    </div>
+    <div class="field"><label>Event Date</label>
+      <input class="input" type="date" name="event_date" value="{{ form.event_date.data or '' }}"></div>
+    <div class="field"><label>Description</label>
+      <textarea class="textarea" name="description" placeholder="Brief description of the event…">{{ form.description.data or '' }}</textarea></div>
+    <div class="form-actions">
+      <a class="btn btn-ghost" href="{{ url_for('events.index') }}">{{ icon('arrow-left') }} Cancel</a>
+      <button class="btn btn-primary" type="submit">{{ icon('check') }} Save Event</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

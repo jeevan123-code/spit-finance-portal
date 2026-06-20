@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+{% from 'partials/icons.html' import icon %}
+{% from 'partials/macros.html' import status_badge with context %}
+{% block title %}{{ event.name }}{% endblock %}
+{% block heading %}{{ event.name }}{% endblock %}
+{% block crumb %}<div class="crumb">{{ event.committee_name or '—' }} · {{ event.event_date|datefmt }}{% if event.venue %} · {{ event.venue }}{% endif %}</div>{% endblock %}
+{% block topbar_action %}
+  <a class="btn btn-ghost btn-sm" href="{{ url_for('reports.event_pdf', event_id=event.id) }}">{{ icon('download') }} I&E PDF</a>
+  {% if current_user.is_committee %}<a class="btn btn-ghost btn-sm" href="{{ url_for('events.edit', event_id=event.id) }}">{{ icon('edit') }} Edit</a>{% endif %}
+{% endblock %}
+
+{% block content %}
+<!-- financial summary -->
+<div class="grid kpis mb">
+  <div class="glass kpi interactive reveal">
+    <div class="kpi-head"><span class="lbl-top">Sanctioned Budget</span><div class="ico green">{{ icon('wallet') }}</div></div>
+    <div class="val" data-count="{{ event.approved_budget }}" data-prefix="₹">₹0</div>
+    <div class="sub">Approved for this event</div>
+  </div>
+  <div class="glass kpi interactive reveal">
+    <div class="kpi-head"><span class="lbl-top">Total Expenditure</span><div class="ico amber">{{ icon('cash') }}</div></div>
+    <div class="val" data-count="{{ event.total_expenditure }}" data-prefix="₹">₹0</div>
+    <div class="sub">Vendor · reimbursement · prizes</div>
+  </div>
+  <div class="glass kpi interactive reveal">
+    <div class="kpi-head"><span class="lbl-top">Balance</span><div class="ico blue">{{ icon('chart') }}</div></div>
+    <div class="val" data-count="{{ event.balance }}" data-prefix="₹">₹0</div>
+    <div class="sub">{{ 'Remaining funds' if event.balance >= 0 else 'Over budget' }}</div>
+  </div>
+  <div class="glass kpi interactive reveal">
+    <div class="kpi-head"><span class="lbl-top">Utilisation</span><div class="ico violet">{{ icon('sparkles') }}</div></div>
+    <div class="val"><span data-count="{{ event.utilisation_pct }}" data-int>0</span>%</div>
+    <div class="progress mt-sm" style="margin-top:12px"><i style="width:{{ event.utilisation_pct }}%"></i></div>
+  </div>
+</div>
+
+{% if current_user.is_committee %}
+<div class="glass card mb reveal">
+  <h3 class="section-title">Create a request for this event</h3>
+  <div class="flex wrap-gap">
+    <a class="btn btn-ghost btn-sm" href="{{ url_for('budgets.create', event_id=event.id) }}">{{ icon('wallet') }} Budget</a>
+    <a class="btn btn-ghost btn-sm" href="{{ url_for('advances.create', event_id=event.id) }}">{{ icon('cash') }} Advance</a>
+    <a class="btn btn-ghost btn-sm" href="{{ url_for('vendors.create', event_id=event.id) }}">{{ icon('truck') }} Vendor Payment</a>
+    <a class="btn btn-ghost btn-sm" href="{{ url_for('reimbursements.create', event_id=event.id) }}">{{ icon('receipt') }} Reimbursement</a>
+    <a class="btn btn-ghost btn-sm" href="{{ url_for('prizes.create', event_id=event.id) }}">{{ icon('trophy') }} Prize Pool</a>
+  </div>
+</div>
+{% endif %}
+
+{% macro req_table(title, ico, items, type_label) %}
+<div class="glass card reveal mb">
+  <h3 class="section-title">{{ icon(ico) }} {{ title }} <span class="chip" style="margin-left:6px">{{ items|length }}</span></h3>
+  {% if items %}
+  <div class="table-wrap"><table class="data">
+    <thead><tr><th>Ref</th><th>Detail</th><th class="right">Amount</th><th>Status</th></tr></thead>
+    <tbody>
+      {% for it in items %}
+      <tr class="row-link" onclick="location.href='{{ detail_link(it) }}'">
+        <td class="num">#{{ '%05d' % it.id }}</td>
+        <td>{{ caller(it) }}</td>
+        <td class="right num">{{ it.total|inr }}</td>
+        <td>{{ status_badge(it) }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table></div>
+  {% else %}<p class="dim" style="font-size:13px;margin:0">No {{ title|lower }} yet.</p>{% endif %}
+</div>
+{% endmacro %}
+
+{% call(it) req_table('Budgets', 'wallet', event.budgets) %}{{ it.title }}{% endcall %}
+{% call(it) req_table('Advances', 'cash', event.advances) %}{{ it.purpose }}{% endcall %}
+{% call(it) req_table('Vendor Payments', 'truck', event.vendor_payments) %}{{ it.vendor_name }}{% endcall %}
+{% call(it) req_table('Reimbursements', 'receipt', event.reimbursements) %}{{ it.claimant_name }}{% endcall %}
+{% call(it) req_table('Prize Pools', 'trophy', event.prize_pools) %}{{ it.competition_name }}{% endcall %}
+{% endblock %}

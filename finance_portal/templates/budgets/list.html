@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+{% from 'partials/icons.html' import icon %}
+{% from 'partials/macros.html' import status_badge with context %}
+{% block title %}Budgets{% endblock %}
+{% block heading %}Budgets{% endblock %}
+{% block crumb %}<div class="crumb">Sanctioned budget heads and their approval status</div>{% endblock %}
+{% block topbar_action %}
+  {% if current_user.is_committee %}<a class="btn btn-primary btn-sm" href="{{ url_for('budgets.create') }}">{{ icon('plus') }} New Budget</a>{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="glass card reveal">
+  {% if budgets %}
+  <div class="table-wrap"><table class="data">
+    <thead><tr><th>Ref</th><th>Title</th><th>Event</th><th>Items</th><th class="right">Total</th><th>Status</th></tr></thead>
+    <tbody>
+      {% for b in budgets %}
+      <tr class="row-link" onclick="location.href='{{ url_for('budgets.detail', item_id=b.id) }}'">
+        <td class="num">#{{ '%05d' % b.id }}</td>
+        <td><b>{{ b.title }}</b></td>
+        <td>{{ b.event.name }}</td>
+        <td class="num">{{ b.items|length }}</td>
+        <td class="right num">{{ b.total|inr }}</td>
+        <td>{{ status_badge(b) }}{% if b.status in inbox_statuses %} <span class="chip" style="color:var(--warning)">Action needed</span>{% endif %}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table></div>
+  {% else %}<div class="empty">{{ icon('wallet') }}<b>No budgets</b>{% if current_user.is_committee %}Create a budget to get started.{% endif %}</div>{% endif %}
+</div>
+{% endblock %}

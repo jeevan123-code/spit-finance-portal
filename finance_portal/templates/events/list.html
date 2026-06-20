@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+{% from 'partials/icons.html' import icon %}
+{% block title %}Events{% endblock %}
+{% block heading %}Events{% endblock %}
+{% block topbar_action %}
+  {% if current_user.is_committee %}
+  <a class="btn btn-primary btn-sm" href="{{ url_for('events.create') }}">{{ icon('plus') }} New Event</a>
+  {% endif %}
+{% endblock %}
+
+{% block content %}
+{% if events %}
+<div class="grid cols-3">
+  {% for e in events %}
+  <a href="{{ url_for('events.detail', event_id=e.id) }}" class="glass card interactive reveal" style="text-decoration:none;color:inherit">
+    <div class="flex between">
+      <div class="ico green" style="width:38px;height:38px;border-radius:11px;display:grid;place-items:center;background:rgba(34,197,94,0.14);color:var(--accent)">{{ icon('calendar') }}</div>
+      <span class="chip">{{ e.event_date|datefmt }}</span>
+    </div>
+    <h3 style="margin:14px 0 2px;font-size:16px">{{ e.name }}</h3>
+    <div class="dim" style="font-size:12.5px">{{ e.committee_name or 'No committee' }}{% if e.venue %} · {{ e.venue }}{% endif %}</div>
+    <div class="flex between mt">
+      <div><div class="dim" style="font-size:11px">Sanctioned</div><b class="num">{{ e.approved_budget|inr }}</b></div>
+      <div class="right"><div class="dim" style="font-size:11px">Spent</div><b class="num">{{ e.total_expenditure|inr }}</b></div>
+    </div>
+    <div class="progress mt-sm"><i style="width:{{ e.utilisation_pct }}%"></i></div>
+    <div class="dim mt-sm" style="font-size:11px">{{ e.utilisation_pct }}% utilised</div>
+  </a>
+  {% endfor %}
+</div>
+{% else %}
+<div class="glass card"><div class="empty">{{ icon('calendar') }}<b>No events yet</b>
+  {% if current_user.is_committee %}Create your first event to start managing finances.{% else %}Committee members can create events.{% endif %}</div></div>
+{% endif %}
+{% endblock %}

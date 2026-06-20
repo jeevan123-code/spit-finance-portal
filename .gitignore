@@ -1,0 +1,21 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+
+# Database (auto-seeded on boot; never commit local data)
+*.db
+finance_portal.db
+
+# Uploaded documents (runtime, not source)
+finance_portal/static/uploads/*
+!finance_portal/static/uploads/.gitkeep
+
+# Env / secrets
+.env
+*.log
+
+# OS
+.DS_Store

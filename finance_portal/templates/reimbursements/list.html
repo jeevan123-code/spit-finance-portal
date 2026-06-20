@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+{% from 'partials/icons.html' import icon %}
+{% from 'partials/macros.html' import status_badge with context %}
+{% block title %}Reimbursements{% endblock %}
+{% block heading %}Reimbursements{% endblock %}
+{% block crumb %}<div class="crumb">Out-of-pocket expense claims by members</div>{% endblock %}
+{% block topbar_action %}
+  {% if current_user.is_committee %}<a class="btn btn-primary btn-sm" href="{{ url_for('reimbursements.create') }}">{{ icon('plus') }} New Reimbursement</a>{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="glass card reveal">
+  {% if reimbursements %}
+  <div class="table-wrap"><table class="data">
+    <thead><tr><th>Ref</th><th>Claimant</th><th>Event</th><th class="right">Amount</th><th>Status</th></tr></thead>
+    <tbody>
+      {% for r in reimbursements %}
+      <tr class="row-link" onclick="location.href='{{ url_for('reimbursements.detail', item_id=r.id) }}'">
+        <td class="num">#{{ '%05d' % r.id }}</td><td><b>{{ r.claimant_name }}</b></td>
+        <td>{{ r.event.name }}</td><td class="right num">{{ r.total|inr }}</td>
+        <td>{{ status_badge(r) }}{% if r.status in inbox_statuses %} <span class="chip" style="color:var(--warning)">Action needed</span>{% endif %}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table></div>
+  {% else %}<div class="empty">{{ icon('receipt') }}<b>No reimbursements</b></div>{% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+{% from 'partials/icons.html' import icon %}
+{% from 'partials/macros.html' import status_badge with context %}
+{% block title %}Advances{% endblock %}
+{% block heading %}Advances{% endblock %}
+{% block crumb %}<div class="crumb">Advance requests and settlement tracking</div>{% endblock %}
+{% block topbar_action %}
+  {% if current_user.is_committee %}<a class="btn btn-primary btn-sm" href="{{ url_for('advances.create') }}">{{ icon('plus') }} New Advance</a>{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="glass card reveal">
+  {% if advances %}
+  <div class="table-wrap"><table class="data">
+    <thead><tr><th>Ref</th><th>Purpose</th><th>Event</th><th>For</th><th class="right">Amount</th><th>Status</th></tr></thead>
+    <tbody>
+      {% for a in advances %}
+      <tr class="row-link" onclick="location.href='{{ url_for('advances.detail', item_id=a.id) }}'">
+        <td class="num">#{{ '%05d' % a.id }}</td><td><b>{{ a.purpose }}</b></td>
+        <td>{{ a.event.name }}</td><td class="muted">{{ a.requested_for or '—' }}</td>
+        <td class="right num">{{ a.total|inr }}</td>
+        <td>{{ status_badge(a) }}{% if a.status in inbox_statuses %} <span class="chip" style="color:var(--warning)">Action needed</span>{% endif %}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table></div>
+  {% else %}<div class="empty">{{ icon('cash') }}<b>No advances</b></div>{% endif %}
+</div>
+{% endblock %}

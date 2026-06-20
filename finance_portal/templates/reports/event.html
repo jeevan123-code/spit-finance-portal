@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+{% from 'partials/icons.html' import icon %}
+{% from 'partials/macros.html' import status_badge with context %}
+{% block title %}I&E — {{ event.name }}{% endblock %}
+{% block heading %}Income &amp; Expenditure{% endblock %}
+{% block crumb %}<div class="crumb">{{ event.name }}</div>{% endblock %}
+{% block topbar_action %}<a class="btn btn-primary btn-sm" href="{{ url_for('reports.event_pdf', event_id=event.id) }}">{{ icon('download') }} Download PDF</a>{% endblock %}
+
+{% block content %}
+<div class="grid cols-2">
+  <div class="glass card reveal">
+    <h3 class="section-title" style="color:var(--accent)">Income — Sanctioned Budgets</h3>
+    <table class="data">
+      <tbody>
+        {% for b in event.budgets if b.status == C.STATUS_APPROVED %}
+        <tr><td>{{ b.title }}</td><td class="right num">{{ b.total|inr }}</td></tr>
+        {% else %}<tr><td class="dim">No approved budgets</td><td class="right num">{{ 0|inr }}</td></tr>{% endfor %}
+      </tbody>
+      <tfoot><tr><td class="right"><b>Total Sanctioned</b></td><td class="right item-total">{{ event.approved_budget|inr }}</td></tr></tfoot>
+    </table>
+  </div>
+
+  <div class="glass card reveal">
+    <h3 class="section-title" style="color:var(--warning)">Expenditure</h3>
+    <table class="data">
+      <tbody>
+        {% for vp in event.vendor_payments if vp.status == C.STATUS_APPROVED %}<tr><td>Vendor · {{ vp.vendor_name }}</td><td class="right num">{{ vp.total|inr }}</td></tr>{% endfor %}
+        {% for rb in event.reimbursements if rb.status == C.STATUS_APPROVED %}<tr><td>Reimbursement · {{ rb.claimant_name }}</td><td class="right num">{{ rb.total|inr }}</td></tr>{% endfor %}
+        {% for pp in event.prize_pools if pp.status == C.STATUS_APPROVED %}<tr><td>Prize · {{ pp.competition_name }}</td><td class="right num">{{ pp.total|inr }}</td></tr>{% endfor %}
+      </tbody>
+      <tfoot><tr><td class="right"><b>Total Expenditure</b></td><td class="right item-total">{{ event.total_expenditure|inr }}</td></tr></tfoot>
+    </table>
+  </div>
+</div>
+
+<div class="glass card reveal mt">
+  <div class="flex between"><h3 style="margin:0">Closing Balance</h3>
+    <b class="num" style="font-size:24px;color:{{ 'var(--accent)' if event.balance >= 0 else '#fca5a5' }}">{{ event.balance|inr }}</b></div>
+</div>
+{% endblock %}

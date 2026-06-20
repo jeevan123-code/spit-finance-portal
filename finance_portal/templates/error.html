@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+{% from 'partials/icons.html' import icon %}
+{% block title %}{{ code }}{% endblock %}
+{% block heading %}Error {{ code }}{% endblock %}
+
+{% block content %}
+<div class="card glass interactive" style="max-width:520px;margin:8vh auto;text-align:center">
+  <div class="brand-mark" style="margin:0 auto 18px;width:54px;height:54px">{{ icon('shield') }}</div>
+  <h1 style="font-size:46px;margin:0;font-family:'Fira Code',monospace">{{ code }}</h1>
+  <p class="muted">{{ message }}</p>
+  <a class="btn btn-primary" href="{{ url_for('dashboard.index') }}" style="margin-top:10px">{{ icon('dashboard') }} Back to Dashboard</a>
+</div>
+{% endblock %}
+
+{% block fullpage %}
+<div class="auth-wrap">
+  <div class="card glass interactive reveal in" style="max-width:520px;text-align:center">
+    <div class="brand-mark" style="margin:0 auto 18px;width:54px;height:54px">{{ icon('shield') }}</div>
+    <h1 style="font-size:46px;margin:0;font-family:'Fira Code',monospace">{{ code }}</h1>
+    <p class="muted">{{ message }}</p>
+    <a class="btn btn-primary" href="{{ url_for('auth.login') }}" style="margin-top:10px">{{ icon('lock') }} Sign In</a>
+  </div>
+</div>
+{% endblock %}

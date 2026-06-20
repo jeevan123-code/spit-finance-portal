@@ -1,0 +1,174 @@
+{% extends 'base.html' %}
+{% from 'partials/icons.html' import icon %}
+{% from 'partials/macros.html' import status_badge with context %}
+{% block title %}Dashboard{% endblock %}
+{% block heading %}Dashboard{% endblock %}
+{% block crumb %}<div class="crumb">Welcome back, {{ current_user.name.split()[0] }} · {{ current_user.role_label }}</div>{% endblock %}
+{% block topbar_action %}
+  {% if current_user.is_committee %}
+  <a class="btn btn-primary btn-sm" href="{{ url_for('events.create') }}">{{ icon('plus') }} New Event</a>
+  {% endif %}
+{% endblock %}
+
+{% block content %}
+<!-- KPI cards -->
+{% set util = (kpi.spent / kpi.sanctioned * 100) if kpi.sanctioned else 0 %}
+<div class="grid kpis mb">
+  <div class="glass kpi interactive reveal">
+    <div class="kpi-head"><span class="lbl-top">Active Events</span><div class="ico violet">{{ icon('calendar') }}</div></div>
+    <div class="val" data-count="{{ kpi.events }}" data-int>0</div>
+    <div class="sub">{% if kpi.pending %}<span class="delta">{{ kpi.pending }}</span> requests in approval{% else %}All requests cleared{% endif %}</div>
+  </div>
+  <div class="glass kpi interactive reveal">
+    <div class="kpi-head"><span class="lbl-top">Total Sanctioned</span><div class="ico green">{{ icon('wallet') }}</div></div>
+    <div class="val" data-count="{{ kpi.sanctioned }}" data-prefix="₹">₹0</div>
+    <div class="sub">Approved budgets across events</div>
+  </div>
+  <div class="glass kpi interactive reveal">
+    <div class="kpi-head"><span class="lbl-top">Total Expenditure</span><div class="ico amber">{{ icon('cash') }}</div></div>
+    <div class="val" data-count="{{ kpi.spent }}" data-prefix="₹">₹0</div>
+    <div class="sub"><span class="delta {{ 'down' if util > 90 else 'up' }}">{{ util|round|int }}%</span> of sanctioned used</div>
+  </div>
+  <div class="glass kpi interactive reveal">
+    <div class="kpi-head"><span class="lbl-top">Closing Balance</span><div class="ico blue">{{ icon('chart') }}</div></div>
+    <div class="val" data-count="{{ kpi.balance }}" data-prefix="₹">₹0</div>
+    <div class="sub">{{ 'Funds available' if kpi.balance >= 0 else 'Over budget' }}</div>
+  </div>
+</div>
+
+<div class="grid cols-2 mb">
+  <!-- Budget vs spend chart -->
+  <div class="glass card interactive reveal">
+    <h3 class="section-title">Sanctioned vs Spent — top events</h3>
+    {% if chart.labels %}
+      <canvas id="budgetChart" height="150"></canvas>
+    {% else %}
+      <div class="empty">{{ icon('chart') }}<b>No financial data yet</b>Create an event and add budgets to see analytics.</div>
+    {% endif %}
+  </div>
+
+  <!-- Status distribution -->
+  <div class="glass card interactive reveal">
+    <h3 class="section-title">Request Status Distribution</h3>
+    {% if status_counts %}
+      <canvas id="statusChart" height="150"></canvas>
+    {% else %}
+      <div class="empty">{{ icon('inbox') }}<b>Nothing in flight</b>Submitted requests will appear here.</div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Approval inbox (approvers only) -->
+{% if current_user.is_approver %}
+<div class="glass card mb reveal">
+  <h3 class="section-title">{{ icon('inbox') }} Your Approval Inbox
+    <span class="chip" style="margin-left:8px">{{ inbox|length }} pending</span></h3>
+  {% if inbox %}
+  <div class="table-wrap">
+    <table class="data">
+      <thead><tr><th>Type</th><th>Reference</th><th>Event</th><th class="right">Amount</th><th>Status</th><th></th></tr></thead>
+      <tbody>
+        {% for item in inbox %}
+        <tr class="row-link" onclick="location.href='{{ detail_link(item) }}'">
+          <td><span class="chip">{{ item.type_label }}</span></td>
+          <td class="num">#{{ '%05d' % item.id }}</td>
+          <td>{{ item.event.name }}</td>
+          <td class="right num">{{ item.total|inr }}</td>
+          <td>{{ status_badge(item) }}</td>
+          <td class="right">
+            <a class="btn btn-ghost btn-sm" href="{{ detail_link(item) }}">{{ icon('eye') }} Review</a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+    <div class="empty">{{ icon('check') }}<b>Inbox zero</b>No requests are awaiting your approval.</div>
+  {% endif %}
+</div>
+{% endif %}
+
+<div class="grid cols-2">
+  <!-- Events overview -->
+  <div class="glass card reveal">
+    <h3 class="section-title">{{ icon('calendar') }} Events</h3>
+    {% if events %}
+    {% for e in events[:5] %}
+      <a href="{{ url_for('events.detail', event_id=e.id) }}" class="flex between" style="padding:11px 0;border-bottom:1px solid var(--border);text-decoration:none;color:inherit">
+        <div>
+          <b style="font-size:14px">{{ e.name }}</b>
+          <div class="dim" style="font-size:12px">{{ e.committee_name or '—' }} · {{ e.event_date|datefmt }}</div>
+        </div>
+        <div class="right">
+          <div class="num" style="font-size:13px">{{ e.approved_budget|inr }}</div>
+          <div class="progress" style="width:90px;margin-top:5px"><i style="width:{{ e.utilisation_pct }}%"></i></div>
+        </div>
+      </a>
+    {% endfor %}
+    {% else %}
+      <div class="empty">{{ icon('calendar') }}<b>No events</b>{% if current_user.is_committee %}Create your first event to begin.{% endif %}</div>
+    {% endif %}
+  </div>
+
+  <!-- Recent activity -->
+  <div class="glass card reveal">
+    <h3 class="section-title">{{ icon('clock') }} Recent Activity</h3>
+    <ul class="timeline">
+      {% for log in recent %}
+      <li>
+        <span class="pt {{ 'reject' if log.action == C.ACTION_REJECT else ('edit' if log.action == C.ACTION_EDIT else '') }}"></span>
+        <div class="flex between"><b>{{ log.type_label }} · {{ log.action_label }}</b>
+          <span class="t">{{ log.created_at|datefmt('%d %b · %I:%M %p') }}</span></div>
+        <p>{{ log.detail }}</p>
+      </li>
+      {% else %}
+        <li class="dim">No activity recorded yet.</li>
+      {% endfor %}
+    </ul>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script>
+  const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  Chart.defaults.color = "#6e6e73";
+  Chart.defaults.font.family = "-apple-system, BlinkMacSystemFont, 'Inter', system-ui, sans-serif";
+  Chart.defaults.borderColor = "rgba(0,0,0,0.06)";
+
+  {% if chart.labels %}
+  new Chart(document.getElementById("budgetChart"), {
+    type: "bar",
+    data: {
+      labels: {{ chart.labels|tojson }},
+      datasets: [
+        { label: "Sanctioned", data: {{ chart.sanctioned|tojson }},
+          backgroundColor: "#0071e3", borderRadius: 7, borderSkipped: false, maxBarThickness: 30 },
+        { label: "Spent", data: {{ chart.spent|tojson }},
+          backgroundColor: "#1d9d4f", borderRadius: 7, borderSkipped: false, maxBarThickness: 30 }
+      ]
+    },
+    options: { responsive: true, animation: reduced ? false : { duration: 900 },
+      plugins: { legend: { position: "bottom", labels: { boxWidth: 12, padding: 16 } } },
+      scales: { y: { beginAtZero: true, ticks: { callback: v => "₹" + v.toLocaleString("en-IN") } },
+                x: { grid: { display: false } } } }
+  });
+  {% endif %}
+
+  {% if status_counts %}
+  new Chart(document.getElementById("statusChart"), {
+    type: "doughnut",
+    data: {
+      labels: {{ status_counts.keys()|map('replace','_',' ')|map('title')|list|tojson }},
+      datasets: [{ data: {{ status_counts.values()|list|tojson }},
+        backgroundColor: ["#c7c7cc","#b25e00","#1d9d4f","#d70015","#0071e3","#6c4bd6"],
+        borderColor: "#ffffff", borderWidth: 3 }]
+    },
+    options: { responsive: true, cutout: "62%", animation: reduced ? false : { duration: 900 },
+      plugins: { legend: { position: "bottom", labels: { boxWidth: 12, padding: 14 } } } }
+  });
+  {% endif %}
+</script>
+{% endblock %}

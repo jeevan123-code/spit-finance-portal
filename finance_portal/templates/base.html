@@ -1,0 +1,101 @@
+{% from 'partials/icons.html' import icon %}
+{% macro navlink(endpoint, ico, label, badge=0) %}
+  {% set active = request.endpoint and request.endpoint.split('.')[0] == endpoint.split('.')[0] %}
+  <a class="nav-item {{ 'active' if active else '' }}" href="{{ url_for(endpoint) }}">
+    {{ icon(ico) }}<span>{{ label }}</span>
+    {% if badge %}<span class="nav-badge">{{ badge }}</span>{% endif %}
+  </a>
+{% endmacro %}
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Finance Portal{% endblock %} · SPIT Student Council</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
+</head>
+<body>
+  <div class="aurora"></div>
+
+  {% if current_user.is_authenticated %}
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark">{{ icon('wallet') }}</div>
+        <div class="brand-text"><b>SPIT Finance</b><span>Student Council Portal</span></div>
+      </div>
+
+      <span class="nav-label">Overview</span>
+      {{ navlink('dashboard.index', 'dashboard', 'Dashboard') }}
+      {{ navlink('events.index', 'calendar', 'Events') }}
+      {{ navlink('reports.index', 'chart', 'Reports') }}
+
+      <span class="nav-label">Financial Requests</span>
+      {{ navlink('budgets.index', 'wallet', 'Budgets') }}
+      {{ navlink('advances.index', 'cash', 'Advances') }}
+      {{ navlink('vendors.index', 'truck', 'Vendor Payments') }}
+      {{ navlink('reimbursements.index', 'receipt', 'Reimbursements') }}
+      {{ navlink('prizes.index', 'trophy', 'Prize Pools') }}
+
+      <span class="nav-label">Records</span>
+      {{ navlink('documents.index', 'folder', 'Documents') }}
+      {{ navlink('notifications.index', 'bell', 'Notifications', badge=nav_unread) }}
+
+      <div class="sidebar-foot">
+        <div class="userchip">
+          <div class="avatar">{{ current_user.initials }}</div>
+          <div style="min-width:0">
+            <b style="display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ current_user.name }}</b>
+            <span>{{ current_user.role_label }}</span>
+          </div>
+        </div>
+        <a class="nav-item" href="{{ url_for('auth.logout') }}">{{ icon('logout') }} Sign out</a>
+      </div>
+    </aside>
+
+    <div class="main">
+      <header class="topbar">
+        <button class="menu-btn btn btn-ghost btn-sm" aria-label="Menu">{{ icon('menu') }}</button>
+        <div>
+          <h1>{% block heading %}{% endblock %}</h1>
+          {% block crumb %}{% endblock %}
+        </div>
+        <div class="topbar-actions">
+          <a class="btn btn-ghost btn-sm" href="{{ url_for('notifications.index') }}">
+            {{ icon('bell') }}{% if nav_unread %}<span class="nav-badge">{{ nav_unread }}</span>{% endif %}
+          </a>
+          {% block topbar_action %}{% endblock %}
+        </div>
+      </header>
+      <main class="content">{% block content %}{% endblock %}</main>
+    </div>
+  </div>
+  {% else %}
+    {% block fullpage %}{% endblock %}
+  {% endif %}
+
+  {# Flash toasts #}
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <div class="toasts">
+      {% for category, message in messages %}
+        {% set cat = 'danger' if category in ['error','danger'] else category %}
+        <div class="toast {{ cat }}">
+          {% if cat == 'success' %}{{ icon('check') }}
+          {% elif cat == 'danger' %}{{ icon('x') }}
+          {% elif cat == 'warning' %}{{ icon('clock') }}
+          {% else %}{{ icon('bell') }}{% endif %}
+          <span>{{ message }}</span>
+        </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+  {% endwith %}
+
+  <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

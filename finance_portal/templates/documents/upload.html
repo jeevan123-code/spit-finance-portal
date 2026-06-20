@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+{% from 'partials/icons.html' import icon %}
+{% block title %}Upload Document{% endblock %}
+{% block heading %}Upload Document{% endblock %}
+
+{% block content %}
+<div class="glass card interactive reveal" style="max-width:620px">
+  <form method="post" enctype="multipart/form-data">
+    {{ form.csrf_token }}
+    <div class="field"><label>Title <span class="req">*</span></label>
+      <input class="input" name="title" required placeholder="e.g. Sound rental invoice"></div>
+    <div class="form-grid">
+      <div class="field"><label>Category</label>
+        <select class="select" name="category">
+          {% for val, label in form.category.choices %}<option value="{{ val }}">{{ label }}</option>{% endfor %}
+        </select></div>
+      <div class="field"><label>Event</label>
+        <select class="select" name="event_id">
+          {% for val, label in form.event_id.choices %}<option value="{{ val }}">{{ label }}</option>{% endfor %}
+        </select></div>
+    </div>
+    <div class="field"><label>File <span class="req">*</span></label>
+      <input class="input" type="file" name="file" required>
+      <div class="help">PDF, images, Office docs — up to 16 MB.</div></div>
+    <div class="form-actions">
+      <a class="btn btn-ghost" href="{{ url_for('documents.index') }}">{{ icon('arrow-left') }} Cancel</a>
+      <button class="btn btn-primary" type="submit">{{ icon('upload') }} Upload</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

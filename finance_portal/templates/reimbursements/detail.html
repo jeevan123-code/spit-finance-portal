@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+{% from 'partials/icons.html' import icon %}
+{% from 'partials/macros.html' import status_badge, stepper, approval_actions, owner_actions, audit_timeline with context %}
+{% block title %}Reimbursement #{{ '%05d' % rb.id }}{% endblock %}
+{% block heading %}{{ rb.claimant_name }}{% endblock %}
+{% block crumb %}<div class="crumb">Reimbursement #{{ '%05d' % rb.id }} · <a href="{{ url_for('events.detail', event_id=rb.event_id) }}">{{ rb.event.name }}</a></div>{% endblock %}
+{% block topbar_action %}<a class="btn btn-ghost btn-sm" href="{{ url_for('reimbursements.pdf', item_id=rb.id) }}">{{ icon('download') }} PDF Form</a>{% endblock %}
+
+{% block content %}
+<div class="grid cols-2">
+  <div>
+    <div class="glass card interactive reveal mb">
+      <div class="flex between mb">{{ status_badge(rb) }}<span class="dim" style="font-size:12px">Created {{ rb.created_at|datefmt }}</span></div>
+      {{ stepper(rb) }}
+      {% if rb.status == C.STATUS_REJECTED and rb.rejection_reason %}
+      <div class="mt" style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.25);padding:12px 14px;border-radius:10px">
+        <b style="color:#fca5a5;font-size:13px">Rejection reason</b><p class="muted" style="margin:4px 0 0;font-size:13px">{{ rb.rejection_reason }}</p></div>
+      {% endif %}
+    </div>
+
+    <div class="glass card reveal mb">
+      <h3 class="section-title">Expense Entries</h3>
+      <div class="table-wrap"><table class="data">
+        <thead><tr><th>Description</th><th class="right">Amount</th></tr></thead>
+        <tbody>{% for it in rb.items %}<tr><td>{{ it.description }}</td><td class="right num">{{ it.amount|inr }}</td></tr>{% endfor %}</tbody>
+        <tfoot><tr><td class="right"><b>Total Reimbursable</b></td><td class="right item-total">{{ rb.total|inr }}</td></tr></tfoot>
+      </table></div>
+    </div>
+
+    <div class="glass card reveal mb">
+      <h3 class="section-title">Bank Details</h3>
+      <dl class="deflist">
+        <div><dt>Bank</dt><dd>{{ rb.bank_name or '—' }}</dd></div>
+        <div><dt>Account Holder</dt><dd>{{ rb.account_name or '—' }}</dd></div>
+        <div><dt>Account No.</dt><dd>{{ rb.account_no or '—' }}</dd></div>
+        <div><dt>IFSC</dt><dd>{{ rb.ifsc or '—' }}</dd></div>
+      </dl>
+    </div>
+
+    {% if can_edit %}
+    <div class="glass card reveal mb"><h3 class="section-title">Actions</h3>
+      {{ owner_actions(rb, url_for('reimbursements.submit', item_id=rb.id), url_for('reimbursements.edit', item_id=rb.id), url_for('reimbursements.delete', item_id=rb.id)) }}</div>
+    {% endif %}
+    {% if can_act %}
+    <div class="glass card reveal mb"><h3 class="section-title">Approval — {{ current_user.role_label }}</h3>
+      {{ approval_actions(rb, url_for('reimbursements.approve', item_id=rb.id), url_for('reimbursements.reject', item_id=rb.id), reject_form) }}</div>
+    {% endif %}
+  </div>
+
+  <div class="glass card reveal"><h3 class="section-title">{{ icon('clock') }} Audit Trail</h3>{{ audit_timeline(history) }}</div>
+</div>
+{% endblock %}

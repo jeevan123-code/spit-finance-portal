@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+{% from 'partials/icons.html' import icon %}
+{% from 'partials/macros.html' import status_badge with context %}
+{% block title %}Vendor Payments{% endblock %}
+{% block heading %}Vendor Payments{% endblock %}
+{% block crumb %}<div class="crumb">Payments to external vendors and suppliers</div>{% endblock %}
+{% block topbar_action %}
+  {% if current_user.is_committee %}<a class="btn btn-primary btn-sm" href="{{ url_for('vendors.create') }}">{{ icon('plus') }} New Vendor Payment</a>{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="glass card reveal">
+  {% if payments %}
+  <div class="table-wrap"><table class="data">
+    <thead><tr><th>Ref</th><th>Vendor</th><th>Invoice</th><th>Event</th><th class="right">Amount</th><th>Status</th></tr></thead>
+    <tbody>
+      {% for p in payments %}
+      <tr class="row-link" onclick="location.href='{{ url_for('vendors.detail', item_id=p.id) }}'">
+        <td class="num">#{{ '%05d' % p.id }}</td><td><b>{{ p.vendor_name }}</b></td>
+        <td class="muted">{{ p.invoice_no or '—' }}</td><td>{{ p.event.name }}</td>
+        <td class="right num">{{ p.total|inr }}</td>
+        <td>{{ status_badge(p) }}{% if p.status in inbox_statuses %} <span class="chip" style="color:var(--warning)">Action needed</span>{% endif %}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table></div>
+  {% else %}<div class="empty">{{ icon('truck') }}<b>No vendor payments</b></div>{% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+{% from 'partials/icons.html' import icon %}
+{% block title %}Sign In{% endblock %}
+
+{% block fullpage %}
+<div class="auth-split">
+  <!-- Branded panel -->
+  <aside class="auth-aside">
+    <div class="auth-aside-top">
+      <div class="brand">
+        <div class="brand-mark">{{ icon('wallet') }}</div>
+        <div class="brand-text"><b style="color:#fff">SPIT Finance</b><span style="color:rgba(255,255,255,0.7)">Student Council Portal</span></div>
+      </div>
+    </div>
+
+    <div class="auth-aside-mid">
+      <h1 class="auth-headline">Every rupee,<br>accounted for.</h1>
+      <p class="auth-sub">From budget to disbursement — a single, auditable home for your council's finances.</p>
+      <ul class="auth-points">
+        <li>{{ icon('check') }} Multi-level approvals, end to end</li>
+        <li>{{ icon('check') }} Auto-generated official PDF forms</li>
+        <li>{{ icon('check') }} Complete audit trail on every action</li>
+      </ul>
+    </div>
+
+    <div class="auth-aside-foot">
+      <div class="auth-stat"><b>4-stage</b><span>approval workflow</span></div>
+      <div class="auth-stat"><b>5 modules</b><span>budgets · advances · vendors · reimbursements · prizes</span></div>
+    </div>
+
+    <div class="auth-orb auth-orb-1"></div>
+    <div class="auth-orb auth-orb-2"></div>
+  </aside>
+
+  <!-- Form -->
+  <main class="auth-main">
+    <div class="auth-form reveal in">
+      <h2 class="auth-title">Welcome back</h2>
+      <p class="dim" style="font-size:14px;margin:6px 0 28px">Sign in to manage council finances.</p>
+
+      <form method="post" action="{{ url_for('auth.login') }}">
+        {{ form.csrf_token }}
+        <div class="field">
+          <label>Email</label>
+          <input class="input" type="email" name="email" autocomplete="email"
+                 placeholder="you@spit.ac.in" required autofocus>
+        </div>
+        <div class="field">
+          <label>Password</label>
+          <input class="input" type="password" name="password"
+                 autocomplete="current-password" placeholder="Enter your password" required>
+        </div>
+        <button class="btn btn-primary btn-block" type="submit" style="margin-top:6px">Sign In</button>
+      </form>
+
+      <p class="dim center" style="font-size:12.5px;margin:26px 0 0">
+        Access is restricted to authorised Student Council members.
+      </p>
+    </div>
+  </main>
+</div>
+{% endblock %}

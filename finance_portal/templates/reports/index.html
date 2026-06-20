@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+{% from 'partials/icons.html' import icon %}
+{% block title %}Reports{% endblock %}
+{% block heading %}Reports{% endblock %}
+{% block topbar_action %}<a class="btn btn-ghost btn-sm" href="{{ url_for('reports.committee_report') }}">{{ icon('users') }} Committee Report</a>{% endblock %}
+
+{% block content %}
+<div class="grid kpis mb">
+  <div class="glass kpi interactive reveal">
+    <div class="kpi-head"><span class="lbl-top">Grand Sanctioned</span><div class="ico green">{{ icon('wallet') }}</div></div>
+    <div class="val" data-count="{{ grand_sanctioned }}" data-prefix="₹">₹0</div>
+    <div class="sub">Across all events</div>
+  </div>
+  <div class="glass kpi interactive reveal">
+    <div class="kpi-head"><span class="lbl-top">Grand Expenditure</span><div class="ico amber">{{ icon('cash') }}</div></div>
+    <div class="val" data-count="{{ grand_spent }}" data-prefix="₹">₹0</div>
+    <div class="sub">Approved outflows</div>
+  </div>
+  <div class="glass kpi interactive reveal">
+    <div class="kpi-head"><span class="lbl-top">Net Balance</span><div class="ico blue">{{ icon('chart') }}</div></div>
+    <div class="val" data-count="{{ grand_sanctioned - grand_spent }}" data-prefix="₹">₹0</div>
+    <div class="sub">{{ 'Surplus' if (grand_sanctioned - grand_spent) >= 0 else 'Deficit' }}</div>
+  </div>
+</div>
+
+<div class="glass card reveal">
+  <h3 class="section-title">{{ icon('chart') }} Income & Expenditure — per event</h3>
+  {% if events %}
+  <div class="table-wrap"><table class="data">
+    <thead><tr><th>Event</th><th>Committee</th><th class="right">Sanctioned</th><th class="right">Spent</th><th class="right">Balance</th><th>Utilisation</th><th></th></tr></thead>
+    <tbody>
+      {% for e in events %}
+      <tr>
+        <td><b>{{ e.name }}</b></td><td class="muted">{{ e.committee_name or '—' }}</td>
+        <td class="right num">{{ e.approved_budget|inr }}</td>
+        <td class="right num">{{ e.total_expenditure|inr }}</td>
+        <td class="right num" style="color:{{ 'var(--accent)' if e.balance >= 0 else '#fca5a5' }}">{{ e.balance|inr }}</td>
+        <td><div class="progress" style="width:90px"><i style="width:{{ e.utilisation_pct }}%"></i></div></td>
+        <td class="right"><a class="btn btn-ghost btn-sm" href="{{ url_for('reports.event_report', event_id=e.id) }}">{{ icon('eye') }}</a>
+          <a class="btn btn-ghost btn-sm" href="{{ url_for('reports.event_pdf', event_id=e.id) }}">{{ icon('download') }}</a></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table></div>
+  {% else %}<div class="empty">{{ icon('chart') }}<b>No data to report</b></div>{% endif %}
+</div>
+{% endblock %}

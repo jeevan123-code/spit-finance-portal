@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+{% from 'partials/icons.html' import icon %}
+{% block title %}Documents{% endblock %}
+{% block heading %}Document Repository{% endblock %}
+{% block topbar_action %}<a class="btn btn-primary btn-sm" href="{{ url_for('documents.upload') }}">{{ icon('upload') }} Upload</a>{% endblock %}
+
+{% block content %}
+<div class="flex wrap-gap mb">
+  <a class="chip" href="{{ url_for('documents.index') }}" style="{{ 'border-color:var(--accent);color:var(--accent)' if not active_category else '' }}">All</a>
+  {% for c in ['bill','invoice','receipt','supporting'] %}
+  <a class="chip" href="{{ url_for('documents.index', category=c) }}" style="{{ 'border-color:var(--accent);color:var(--accent)' if active_category == c else '' }}">{{ c|title }}s</a>
+  {% endfor %}
+</div>
+
+<div class="glass card reveal">
+  {% if documents %}
+  <div class="table-wrap"><table class="data">
+    <thead><tr><th>Title</th><th>Category</th><th>Event</th><th>Uploaded By</th><th>Date</th><th></th></tr></thead>
+    <tbody>
+      {% for d in documents %}
+      <tr>
+        <td><b>{{ d.title }}</b><div class="dim" style="font-size:11px">{{ d.original_name }}</div></td>
+        <td><span class="chip">{{ d.category_label }}</span></td>
+        <td>{{ d.event.name if d.event else '—' }}</td>
+        <td class="muted">{{ d.uploaded_by.name if d.uploaded_by else '—' }}</td>
+        <td class="dim" style="font-size:12px">{{ d.uploaded_at|datefmt }}</td>
+        <td class="right flex wrap-gap" style="justify-content:flex-end">
+          <a class="btn btn-ghost btn-sm" href="{{ url_for('documents.download', doc_id=d.id) }}">{{ icon('download') }}</a>
+          {% if d.uploaded_by_id == current_user.id or current_user.role == 'dean' %}
+          <form method="post" action="{{ url_for('documents.delete', doc_id=d.id) }}" data-confirm="Delete this document?">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button class="btn btn-danger btn-sm" type="submit">{{ icon('trash') }}</button>
+          </form>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table></div>
+  {% else %}<div class="empty">{{ icon('folder') }}<b>No documents</b>Upload bills, invoices, and receipts here.</div>{% endif %}
+</div>
+{% endblock %}

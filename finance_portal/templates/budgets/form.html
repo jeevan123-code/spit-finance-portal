@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+{% from 'partials/icons.html' import icon %}
+{% from 'partials/macros.html' import event_select with context %}
+{% block title %}{{ 'Edit' if mode == 'edit' else 'New' }} Budget{% endblock %}
+{% block heading %}{{ 'Edit Budget' if mode == 'edit' else 'New Budget' }}{% endblock %}
+
+{% block content %}
+<form method="post" class="reveal" style="max-width:920px">
+  {{ form.csrf_token }}
+  <div class="glass card mb">
+    <h3 class="section-title">Budget Details</h3>
+    {% if mode == 'create' %}{{ event_select(events, event_id) }}{% endif %}
+    <div class="field"><label>Budget Title <span class="req">*</span></label>
+      <input class="input" name="title" required value="{{ budget.title if budget else (form.title.data or '') }}" placeholder="e.g. Stage & Sound Setup"></div>
+    <div class="field"><label>Notes</label>
+      <textarea class="textarea" name="notes" placeholder="Optional notes…">{{ budget.notes if budget else (form.notes.data or '') }}</textarea></div>
+  </div>
+
+  <div class="glass card mb" data-repeater="budgetRowTpl">
+    <div class="flex between mb"><h3 class="section-title" style="margin:0">Line Items</h3>
+      <button type="button" class="btn btn-ghost btn-sm" data-add-row>{{ icon('plus') }} Add Item</button></div>
+    <table class="items-table">
+      <thead><tr><th style="width:24%">Category</th><th>Description</th><th style="width:90px">Qty</th><th style="width:130px">Unit Cost ₹</th><th style="width:120px">Amount</th><th style="width:46px"></th></tr></thead>
+      <tbody data-rows>
+        {% if budget and budget.items %}
+          {% for it in budget.items %}
+          <tr data-row>
+            <td><input class="input" name="item_category[]" value="{{ it.category }}" placeholder="Category" required></td>
+            <td><input class="input" name="item_description[]" value="{{ it.description or '' }}" placeholder="Description"></td>
+            <td><input class="input" type="number" step="0.01" name="item_qty[]" value="{{ '%g' % it.quantity }}" data-qty></td>
+            <td><input class="input" type="number" step="0.01" name="item_cost[]" value="{{ it.unit_cost }}" data-cost></td>
+            <td class="num" data-line>₹0.00</td>
+            <td><button type="button" class="row-remove" data-remove>{{ icon('x') }}</button></td>
+          </tr>
+          {% endfor %}
+        {% endif %}
+      </tbody>
+      <tfoot><tr><td colspan="4" class="right"><b>Total</b></td><td class="item-total" data-total>₹0.00</td><td></td></tr></tfoot>
+    </table>
+  </div>
+
+  <div class="form-actions">
+    <a class="btn btn-ghost" href="{{ url_for('budgets.index') }}">{{ icon('arrow-left') }} Cancel</a>
+    <button class="btn btn-primary" type="submit">{{ icon('check') }} Save Draft</button>
+  </div>
+</form>
+
+<template id="budgetRowTpl">
+  <tr data-row>
+    <td><input class="input" name="item_category[]" placeholder="Category" required></td>
+    <td><input class="input" name="item_description[]" placeholder="Description"></td>
+    <td><input class="input" type="number" step="0.01" name="item_qty[]" value="1" data-qty></td>
+    <td><input class="input" type="number" step="0.01" name="item_cost[]" value="0" data-cost></td>
+    <td class="num" data-line>₹0.00</td>
+    <td><button type="button" class="row-remove" data-remove>{{ icon('x') }}</button></td>
+  </tr>
+</template>
+{% endblock %}

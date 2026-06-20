@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+{% from 'partials/icons.html' import icon %}
+{% from 'partials/macros.html' import status_badge, stepper, approval_actions, owner_actions, audit_timeline with context %}
+{% block title %}Prize Pool #{{ '%05d' % pp.id }}{% endblock %}
+{% block heading %}{{ pp.competition_name }}{% endblock %}
+{% block crumb %}<div class="crumb">Prize Pool #{{ '%05d' % pp.id }} · <a href="{{ url_for('events.detail', event_id=pp.event_id) }}">{{ pp.event.name }}</a></div>{% endblock %}
+{% block topbar_action %}<a class="btn btn-ghost btn-sm" href="{{ url_for('prizes.pdf', item_id=pp.id) }}">{{ icon('download') }} PDF Form</a>{% endblock %}
+
+{% block content %}
+<div class="grid cols-2">
+  <div>
+    <div class="glass card interactive reveal mb">
+      <div class="flex between mb">{{ status_badge(pp) }}<span class="dim" style="font-size:12px">Created {{ pp.created_at|datefmt }}</span></div>
+      {{ stepper(pp) }}
+      {% if pp.status == C.STATUS_REJECTED and pp.rejection_reason %}
+      <div class="mt" style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.25);padding:12px 14px;border-radius:10px">
+        <b style="color:#fca5a5;font-size:13px">Rejection reason</b><p class="muted" style="margin:4px 0 0;font-size:13px">{{ pp.rejection_reason }}</p></div>
+      {% endif %}
+    </div>
+
+    <div class="glass card reveal mb">
+      <h3 class="section-title">Winners</h3>
+      <div class="table-wrap"><table class="data">
+        <thead><tr><th>Pos</th><th>Winner</th><th>Account / IFSC</th><th class="right">Prize</th><th>Payment</th></tr></thead>
+        <tbody>
+          {% for w in pp.winners %}
+          <tr>
+            <td><span class="chip">#{{ w.position }}</span></td>
+            <td><b>{{ w.winner_name }}</b></td>
+            <td class="muted num" style="font-size:12px">{{ w.account_no or '—' }}{% if w.ifsc %} · {{ w.ifsc }}{% endif %}</td>
+            <td class="right num">{{ w.prize_amount|inr }}</td>
+            <td>
+              {% if pp.status == C.STATUS_APPROVED and current_user.is_committee %}
+                <form method="post" action="{{ url_for('prizes.toggle_paid', item_id=pp.id, winner_id=w.id) }}">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <button class="badge {{ 'badge-approved' if w.paid else 'badge-pending' }}" style="border:none;cursor:pointer" type="submit">{{ 'Paid' if w.paid else 'Mark Paid' }}</button>
+                </form>
+              {% else %}
+                <span class="badge {{ 'badge-approved' if w.paid else 'badge-draft' }}">{{ 'Paid' if w.paid else 'Pending' }}</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+        <tfoot><tr><td colspan="3" class="right"><b>Total Pool</b></td><td class="right item-total">{{ pp.total|inr }}</td><td></td></tr></tfoot>
+      </table></div>
+    </div>
+
+    {% if can_edit %}
+    <div class="glass card reveal mb"><h3 class="section-title">Actions</h3>
+      {{ owner_actions(pp, url_for('prizes.submit', item_id=pp.id), url_for('prizes.edit', item_id=pp.id), url_for('prizes.delete', item_id=pp.id)) }}</div>
+    {% endif %}
+    {% if can_act %}
+    <div class="glass card reveal mb"><h3 class="section-title">Approval — {{ current_user.role_label }}</h3>
+      {{ approval_actions(pp, url_for('prizes.approve', item_id=pp.id), url_for('prizes.reject', item_id=pp.id), reject_form) }}</div>
+    {% endif %}
+  </div>
+
+  <div class="glass card reveal"><h3 class="section-title">{{ icon('clock') }} Audit Trail</h3>{{ audit_timeline(history) }}</div>
+</div>
+{% endblock %}

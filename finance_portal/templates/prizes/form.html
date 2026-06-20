@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+{% from 'partials/icons.html' import icon %}
+{% from 'partials/macros.html' import event_select with context %}
+{% block title %}{{ 'Edit' if mode == 'edit' else 'New' }} Prize Pool{% endblock %}
+{% block heading %}{{ 'Edit Prize Pool' if mode == 'edit' else 'New Prize Pool' }}{% endblock %}
+
+{% block content %}
+<form method="post" class="reveal" style="max-width:960px">
+  {{ form.csrf_token }}
+  <div class="glass card mb">
+    <h3 class="section-title">Competition</h3>
+    {% if mode == 'create' %}{{ event_select(events, event_id) }}{% endif %}
+    <div class="field"><label>Competition Name <span class="req">*</span></label>
+      <input class="input" name="competition_name" required value="{{ pp.competition_name if pp else (form.competition_name.data or '') }}" placeholder="e.g. Hackathon Grand Finale"></div>
+  </div>
+
+  <div class="glass card mb" data-repeater="winnerRowTpl">
+    <div class="flex between mb"><h3 class="section-title" style="margin:0">Winners</h3>
+      <button type="button" class="btn btn-ghost btn-sm" data-add-row>{{ icon('plus') }} Add Winner</button></div>
+    <table class="items-table">
+      <thead><tr><th>Winner Name</th><th style="width:140px">Prize ₹</th><th style="width:150px">Account No.</th><th style="width:120px">IFSC</th><th style="width:46px"></th></tr></thead>
+      <tbody data-rows>
+        {% if pp and pp.winners %}{% for w in pp.winners %}
+        <tr data-row>
+          <td><input class="input" name="winner_name[]" value="{{ w.winner_name }}" placeholder="Winner name" required></td>
+          <td><input class="input" type="number" step="0.01" name="winner_amount[]" value="{{ w.prize_amount }}" data-amount></td>
+          <td><input class="input" name="winner_account[]" value="{{ w.account_no or '' }}" placeholder="Account"></td>
+          <td><input class="input" name="winner_ifsc[]" value="{{ w.ifsc or '' }}" placeholder="IFSC"></td>
+          <td><button type="button" class="row-remove" data-remove>{{ icon('x') }}</button></td>
+        </tr>{% endfor %}{% endif %}
+      </tbody>
+      <tfoot><tr><td class="right"><b>Total Pool</b></td><td class="item-total" data-total>₹0.00</td><td colspan="3"></td></tr></tfoot>
+    </table>
+  </div>
+
+  <div class="form-actions">
+    <a class="btn btn-ghost" href="{{ url_for('prizes.index') }}">{{ icon('arrow-left') }} Cancel</a>
+    <button class="btn btn-primary" type="submit">{{ icon('check') }} Save Draft</button>
+  </div>
+</form>
+
+<template id="winnerRowTpl">
+  <tr data-row>
+    <td><input class="input" name="winner_name[]" placeholder="Winner name" required></td>
+    <td><input class="input" type="number" step="0.01" name="winner_amount[]" value="0" data-amount></td>
+    <td><input class="input" name="winner_account[]" placeholder="Account"></td>
+    <td><input class="input" name="winner_ifsc[]" placeholder="IFSC"></td>
+    <td><button type="button" class="row-remove" data-remove>{{ icon('x') }}</button></td>
+  </tr>
+</template>
+{% endblock %}

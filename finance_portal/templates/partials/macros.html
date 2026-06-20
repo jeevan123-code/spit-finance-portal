@@ -1,0 +1,126 @@
+{% from 'partials/icons.html' import icon %}
+
+{# Status badge #}
+{% macro status_badge(item) -%}
+<span class="badge {{ item.badge_class }}">{{ item.status_label }}</span>
+{%- endmacro %}
+
+{# 4-stage approval stepper. `item` carries .status #}
+{% macro stepper(item) -%}
+{% set order = [C.STATUS_DRAFT, C.STATUS_PENDING_FINANCE, C.STATUS_PENDING_ASSOC, C.STATUS_PENDING_DEAN, C.STATUS_APPROVED] %}
+{% set labels = {
+  C.STATUS_DRAFT: ('Committee', 'Created'),
+  C.STATUS_PENDING_FINANCE: ('Finance Secretary', 'Review'),
+  C.STATUS_PENDING_ASSOC: ('Associate Dean', 'Review'),
+  C.STATUS_PENDING_DEAN: ('Dean', 'Final approval'),
+  C.STATUS_APPROVED: ('Approved', 'Complete')
+} %}
+{% set rejected = item.status == C.STATUS_REJECTED %}
+{% set cur_index = order.index(item.status) if item.status in order else (order|length if item.status in [C.STATUS_APPROVED, C.STATUS_SETTLED] else 0) %}
+<div class="stepper">
+  {% for st in order %}
+    {% set idx = loop.index0 %}
+    {% set done = idx < cur_index or item.status in [C.STATUS_APPROVED, C.STATUS_SETTLED] %}
+    {% set current = idx == cur_index and not (item.status in [C.STATUS_APPROVED, C.STATUS_SETTLED]) %}
+    <div class="step {{ 'done' if done else '' }} {{ 'current' if current and not rejected else '' }} {{ 'rejected' if current and rejected else '' }}">
+      <div class="dot">
+        {% if done %}{{ icon('check') }}
+        {% elif current and rejected %}{{ icon('x') }}
+        {% else %}{{ idx + 1 }}{% endif %}
+      </div>
+      <div class="meta"><b>{{ labels[st][0] }}</b><span>{{ labels[st][1] }}</span></div>
+    </div>
+    {% if not loop.last %}<div class="bar {{ 'done' if idx < cur_index else '' }}"></div>{% endif %}
+  {% endfor %}
+</div>
+{%- endmacro %}
+
+{# Approve / Reject action bar for approvers #}
+{% macro approval_actions(item, approve_url, reject_url, reject_form) -%}
+<div class="flex wrap-gap">
+  <form method="post" action="{{ approve_url }}">
+    {{ reject_form.csrf_token }}
+    <button class="btn btn-primary" type="submit">{{ icon('check') }} Approve</button>
+  </form>
+  <button class="btn btn-danger" data-modal-open="rejectModal">{{ icon('x') }} Reject</button>
+</div>
+
+<div class="modal-backdrop" id="rejectModal">
+  <div class="modal glass">
+    <h3 style="margin-top:0">Reject this request</h3>
+    <p class="dim" style="font-size:13px">Provide a reason — the committee will be notified.</p>
+    <form method="post" action="{{ reject_url }}">
+      {{ reject_form.csrf_token }}
+      <div class="field">
+        <textarea name="reason" class="textarea" required placeholder="e.g. Budget head exceeds sanctioned limit."></textarea>
+      </div>
+      <div class="form-actions">
+        <button type="button" class="btn btn-ghost" data-modal-close>Cancel</button>
+        <button type="submit" class="btn btn-danger">{{ icon('x') }} Confirm Rejection</button>
+      </div>
+    </form>
+  </div>
+</div>
+{%- endmacro %}
+
+{# Committee action bar: submit / edit / delete #}
+{% macro owner_actions(item, submit_url, edit_url, delete_url) -%}
+<div class="flex wrap-gap">
+  {% if item.is_editable %}
+    <form method="post" action="{{ submit_url }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button class="btn btn-primary" type="submit">{{ icon('send') }} Submit for Approval</button>
+    </form>
+    <a class="btn btn-ghost" href="{{ edit_url }}">{{ icon('edit') }} Edit</a>
+    <form method="post" action="{{ delete_url }}" data-confirm="Delete this {{ item.type_label|lower }}? This cannot be undone.">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button class="btn btn-danger" type="submit">{{ icon('trash') }} Delete</button>
+    </form>
+  {% endif %}
+</div>
+{%- endmacro %}
+
+{# Audit timeline #}
+{% macro audit_timeline(history) -%}
+<ul class="timeline">
+  {% for log in history %}
+    <li>
+      <span class="pt {{ 'reject' if log.action == C.ACTION_REJECT else ('edit' if log.action == C.ACTION_EDIT else '') }}"></span>
+      <div class="flex between">
+        <b>{{ log.action_label }}</b>
+        <span class="t">{{ log.created_at|datefmt('%d %b %Y · %I:%M %p') }}</span>
+      </div>
+      <p>{{ log.detail }}{% if log.actor %} — <span class="muted">{{ log.actor.name }} ({{ log.actor.role_label }})</span>{% endif %}</p>
+    </li>
+  {% else %}
+    <li class="dim">No history yet.</li>
+  {% endfor %}
+</ul>
+{%- endmacro %}
+
+{# Event selector for create forms #}
+{% macro event_select(events, selected_id) -%}
+<div class="field">
+  <label>Event <span class="req">*</span></label>
+  <select name="event_id" class="select" required>
+    <option value="">— Choose an event —</option>
+    {% for e in events %}
+      <option value="{{ e.id }}" {{ 'selected' if selected_id and e.id == selected_id else '' }}>{{ e.name }}</option>
+    {% endfor %}
+  </select>
+</div>
+{%- endmacro %}
+
+{# Bank-details fieldset (vendor / reimbursement) #}
+{% macro bank_fields(obj) -%}
+<div class="form-grid">
+  <div class="field"><label>Bank Name</label>
+    <input class="input" name="bank_name" value="{{ obj.bank_name if obj else '' }}"></div>
+  <div class="field"><label>Account Holder</label>
+    <input class="input" name="account_name" value="{{ obj.account_name if obj else '' }}"></div>
+  <div class="field"><label>Account Number</label>
+    <input class="input" name="account_no" value="{{ obj.account_no if obj else '' }}"></div>
+  <div class="field"><label>IFSC</label>
+    <input class="input" name="ifsc" value="{{ obj.ifsc if obj else '' }}"></div>
+</div>
+{%- endmacro %}

@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+{% from 'partials/icons.html' import icon %}
+{% block title %}Committee Report{% endblock %}
+{% block heading %}Committee-wise Report{% endblock %}
+
+{% block content %}
+<div class="glass card reveal">
+  <h3 class="section-title">{{ icon('users') }} Sanctioned vs Spent by Committee</h3>
+  {% if by_committee %}
+  <div class="table-wrap"><table class="data">
+    <thead><tr><th>Committee</th><th class="right">Events</th><th class="right">Sanctioned</th><th class="right">Spent</th><th class="right">Balance</th></tr></thead>
+    <tbody>
+      {% for name, agg in by_committee.items() %}
+      <tr>
+        <td><b>{{ name }}</b></td>
+        <td class="right num">{{ agg.events }}</td>
+        <td class="right num">{{ agg.sanctioned|inr }}</td>
+        <td class="right num">{{ agg.spent|inr }}</td>
+        <td class="right num" style="color:{{ 'var(--accent)' if agg.balance >= 0 else '#fca5a5' }}">{{ agg.balance|inr }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table></div>
+  {% else %}<div class="empty">{{ icon('users') }}<b>No committee data</b></div>{% endif %}
+</div>
+{% endblock %}

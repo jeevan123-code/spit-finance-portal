@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+{% from 'partials/icons.html' import icon %}
+{% from 'partials/macros.html' import event_select, bank_fields with context %}
+{% block title %}{{ 'Edit' if mode == 'edit' else 'New' }} Reimbursement{% endblock %}
+{% block heading %}{{ 'Edit Reimbursement' if mode == 'edit' else 'New Reimbursement' }}{% endblock %}
+
+{% block content %}
+<form method="post" class="reveal" style="max-width:920px">
+  {{ form.csrf_token }}
+  <div class="glass card mb">
+    <h3 class="section-title">Claimant</h3>
+    {% if mode == 'create' %}{{ event_select(events, event_id) }}{% endif %}
+    <div class="field"><label>Claimant Name <span class="req">*</span></label>
+      <input class="input" name="claimant_name" required value="{{ rb.claimant_name if rb else (form.claimant_name.data or '') }}" placeholder="e.g. Aarav Sharma"></div>
+  </div>
+
+  <div class="glass card mb">
+    <h3 class="section-title">Bank Details</h3>
+    {{ bank_fields(rb) }}
+  </div>
+
+  <div class="glass card mb" data-repeater="rbRowTpl">
+    <div class="flex between mb"><h3 class="section-title" style="margin:0">Expense Entries</h3>
+      <button type="button" class="btn btn-ghost btn-sm" data-add-row>{{ icon('plus') }} Add Expense</button></div>
+    <table class="items-table">
+      <thead><tr><th>Description</th><th style="width:170px">Amount ₹</th><th style="width:46px"></th></tr></thead>
+      <tbody data-rows>
+        {% if rb and rb.items %}{% for it in rb.items %}
+        <tr data-row>
+          <td><input class="input" name="item_description[]" value="{{ it.description }}" placeholder="Description" required></td>
+          <td><input class="input" type="number" step="0.01" name="item_amount[]" value="{{ it.amount }}" data-amount></td>
+          <td><button type="button" class="row-remove" data-remove>{{ icon('x') }}</button></td>
+        </tr>{% endfor %}{% endif %}
+      </tbody>
+      <tfoot><tr><td class="right"><b>Total</b></td><td class="item-total" data-total>₹0.00</td><td></td></tr></tfoot>
+    </table>
+  </div>
+
+  <div class="form-actions">
+    <a class="btn btn-ghost" href="{{ url_for('reimbursements.index') }}">{{ icon('arrow-left') }} Cancel</a>
+    <button class="btn btn-primary" type="submit">{{ icon('check') }} Save Draft</button>
+  </div>
+</form>
+
+<template id="rbRowTpl">
+  <tr data-row>
+    <td><input class="input" name="item_description[]" placeholder="Description" required></td>
+    <td><input class="input" type="number" step="0.01" name="item_amount[]" value="0" data-amount></td>
+    <td><button type="button" class="row-remove" data-remove>{{ icon('x') }}</button></td>
+  </tr>
+</template>
+{% endblock %}

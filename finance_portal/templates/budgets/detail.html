@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+{% from 'partials/icons.html' import icon %}
+{% from 'partials/macros.html' import status_badge, stepper, approval_actions, owner_actions, audit_timeline with context %}
+{% block title %}Budget #{{ '%05d' % budget.id }}{% endblock %}
+{% block heading %}{{ budget.title }}{% endblock %}
+{% block crumb %}<div class="crumb">Budget #{{ '%05d' % budget.id }} · <a href="{{ url_for('events.detail', event_id=budget.event_id) }}">{{ budget.event.name }}</a></div>{% endblock %}
+
+{% block content %}
+<div class="grid cols-2">
+  <div>
+    <div class="glass card interactive reveal mb">
+      <div class="flex between mb">{{ status_badge(budget) }}<span class="dim" style="font-size:12px">Created {{ budget.created_at|datefmt }}</span></div>
+      {{ stepper(budget) }}
+      {% if budget.status == C.STATUS_REJECTED and budget.rejection_reason %}
+      <div class="mt" style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.25);padding:12px 14px;border-radius:10px">
+        <b style="color:#fca5a5;font-size:13px">Rejection reason</b><p class="muted" style="margin:4px 0 0;font-size:13px">{{ budget.rejection_reason }}</p></div>
+      {% endif %}
+    </div>
+
+    <div class="glass card reveal mb">
+      <h3 class="section-title">Line Items</h3>
+      <div class="table-wrap"><table class="data">
+        <thead><tr><th>Category</th><th>Description</th><th class="right">Qty</th><th class="right">Unit Cost</th><th class="right">Amount</th></tr></thead>
+        <tbody>
+          {% for it in budget.items %}
+          <tr><td><b>{{ it.category }}</b></td><td class="muted">{{ it.description or '—' }}</td>
+            <td class="right num">{{ '%g' % it.quantity }}</td><td class="right num">{{ it.unit_cost|inr }}</td>
+            <td class="right num">{{ it.amount|inr }}</td></tr>
+          {% endfor %}
+        </tbody>
+        <tfoot><tr><td colspan="4" class="right"><b>Total</b></td><td class="right item-total">{{ budget.total|inr }}</td></tr></tfoot>
+      </table></div>
+      {% if budget.notes %}<p class="muted mt-sm" style="font-size:13px">{{ budget.notes }}</p>{% endif %}
+    </div>
+
+    {% if can_edit %}
+    <div class="glass card reveal mb"><h3 class="section-title">Actions</h3>
+      {{ owner_actions(budget, url_for('budgets.submit', item_id=budget.id), url_for('budgets.edit', item_id=budget.id), url_for('budgets.delete', item_id=budget.id)) }}</div>
+    {% endif %}
+    {% if can_act %}
+    <div class="glass card reveal mb"><h3 class="section-title">Approval — {{ current_user.role_label }}</h3>
+      {{ approval_actions(budget, url_for('budgets.approve', item_id=budget.id), url_for('budgets.reject', item_id=budget.id), reject_form) }}</div>
+    {% endif %}
+  </div>
+
+  <div class="glass card reveal">
+    <h3 class="section-title">{{ icon('clock') }} Audit Trail</h3>
+    {{ audit_timeline(history) }}
+  </div>
+</div>
+{% endblock %}

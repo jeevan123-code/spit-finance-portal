@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+{% from 'partials/icons.html' import icon %}
+{% from 'partials/macros.html' import status_badge, stepper, approval_actions, owner_actions, audit_timeline with context %}
+{% block title %}Advance #{{ '%05d' % advance.id }}{% endblock %}
+{% block heading %}{{ advance.purpose }}{% endblock %}
+{% block crumb %}<div class="crumb">Advance #{{ '%05d' % advance.id }} · <a href="{{ url_for('events.detail', event_id=advance.event_id) }}">{{ advance.event.name }}</a></div>{% endblock %}
+
+{% block content %}
+<div class="grid cols-2">
+  <div>
+    <div class="glass card interactive reveal mb">
+      <div class="flex between mb">{{ status_badge(advance) }}<span class="dim" style="font-size:12px">Created {{ advance.created_at|datefmt }}</span></div>
+      {{ stepper(advance) }}
+      {% if advance.status == C.STATUS_REJECTED and advance.rejection_reason %}
+      <div class="mt" style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.25);padding:12px 14px;border-radius:10px">
+        <b style="color:#fca5a5;font-size:13px">Rejection reason</b><p class="muted" style="margin:4px 0 0;font-size:13px">{{ advance.rejection_reason }}</p></div>
+      {% endif %}
+    </div>
+
+    <div class="glass card reveal mb detail-hero">
+      <div>
+        <div class="lbl-top">Advance Amount</div>
+        <div class="amount">{{ advance.total|inr }}</div>
+      </div>
+      {% if advance.is_settled %}<span class="badge badge-settled">Settled · {{ advance.settled_amount|inr }}</span>{% endif %}
+    </div>
+
+    <div class="glass card reveal mb">
+      <h3 class="section-title">Advance Details</h3>
+      <dl class="deflist">
+        <div><dt>Purpose</dt><dd>{{ advance.purpose }}</dd></div>
+        <div><dt>Requested For</dt><dd>{{ advance.requested_for or '—' }}</dd></div>
+        {% if advance.is_settled %}
+        <div><dt>Settled Amount</dt><dd>{{ advance.settled_amount|inr }}</dd></div>
+        <div><dt>Settled On</dt><dd>{{ advance.settled_at|datefmt }}</dd></div>
+        {% endif %}
+      </dl>
+      {% if advance.is_settled and advance.settlement_notes %}<p class="muted mt" style="font-size:13px">{{ advance.settlement_notes }}</p>{% endif %}
+    </div>
+
+    {% if can_edit %}
+    <div class="glass card reveal mb"><h3 class="section-title">Actions</h3>
+      {{ owner_actions(advance, url_for('advances.submit', item_id=advance.id), url_for('advances.edit', item_id=advance.id), url_for('advances.delete', item_id=advance.id)) }}</div>
+    {% endif %}
+    {% if can_act %}
+    <div class="glass card reveal mb"><h3 class="section-title">Approval — {{ current_user.role_label }}</h3>
+      {{ approval_actions(advance, url_for('advances.approve', item_id=advance.id), url_for('advances.reject', item_id=advance.id), reject_form) }}</div>
+    {% endif %}
+
+    {% if current_user.is_committee and advance.status == C.STATUS_APPROVED %}
+    <div class="glass card reveal mb"><h3 class="section-title">Record Settlement</h3>
+      <form method="post" action="{{ url_for('advances.settle', item_id=advance.id) }}">
+        {{ settle_form.csrf_token }}
+        <div class="form-grid">
+          <div class="field"><label>Settled Amount (₹) <span class="req">*</span></label>
+            <input class="input" type="number" step="0.01" name="settled_amount" required value="{{ advance.amount }}"></div>
+          <div class="field"><label>Notes</label><input class="input" name="settlement_notes" placeholder="Reconciliation notes"></div>
+        </div>
+        <button class="btn btn-primary" type="submit">{{ icon('check') }} Record Settlement</button>
+      </form></div>
+    {% endif %}
+  </div>
+
+  <div class="glass card reveal"><h3 class="section-title">{{ icon('clock') }} Audit Trail</h3>{{ audit_timeline(history) }}</div>
+</div>
+{% endblock %}
