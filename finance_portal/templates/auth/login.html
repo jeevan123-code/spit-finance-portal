@@ -43,14 +43,17 @@
         <div class="field">
           <label>Email</label>
           <input class="input" type="email" name="email" autocomplete="email"
-                 placeholder="you@spit.ac.in" required autofocus>
+                 placeholder="you@spit.ac.in" required autofocus
+                 value="{{ 'committee@spit.ac.in' if demo_mode else '' }}">
         </div>
         <div class="field">
           <label>Password</label>
           <input class="input" type="password" name="password"
-                 autocomplete="current-password" placeholder="Enter your password" required>
+                 autocomplete="current-password" placeholder="Enter your password" required
+                 value="{{ 'Committee@SPIT26' if demo_mode else '' }}">
         </div>
-        <button class="btn btn-primary btn-block" type="submit" style="margin-top:6px">Sign In</button>
+        <button class="btn btn-primary btn-block" type="submit" style="margin-top:6px">
+          {{ 'Explore the demo (Committee)' if demo_mode else 'Sign In' }}</button>
       </form>
 
       {% if demo_mode %}

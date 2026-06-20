@@ -36,10 +36,11 @@ class BaseConfig:
     ORG_NAME = "Sardar Patel Institute of Technology"
     ORG_SUBTITLE = "Student Council — Finance Management Portal"
 
-    # Public-demo flag. When DEMO_MODE=1, the login page shows the demo
-    # credentials so prospective clients can sign in. Off by default, so a
-    # real deployment never exposes them.
-    DEMO_MODE = os.environ.get("DEMO_MODE") == "1"
+    # Public-demo flag. This repo is deployed as a public demo, so it defaults
+    # ON: the login page shows demo credentials and pre-fills the form so a
+    # prospective client can sign in with one click. For a real handover,
+    # set DEMO_MODE=0 to hide credentials and disable pre-fill.
+    DEMO_MODE = os.environ.get("DEMO_MODE", "1") == "1"
 
 
 class DevelopmentConfig(BaseConfig):
