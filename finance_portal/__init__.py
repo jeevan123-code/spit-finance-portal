@@ -77,6 +77,7 @@ def create_app(config_name=None):
             "STATUS_LABELS": C.STATUS_LABELS,
             "TYPE_LABELS": C.TYPE_LABELS,
             "detail_link": detail_link,
+            "demo_mode": app.config.get("DEMO_MODE", False),
         }
         if current_user.is_authenticated:
             ctx["nav_unread"] = unread_count(current_user.id)

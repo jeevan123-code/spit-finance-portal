@@ -36,6 +36,11 @@ class BaseConfig:
     ORG_NAME = "Sardar Patel Institute of Technology"
     ORG_SUBTITLE = "Student Council — Finance Management Portal"
 
+    # Public-demo flag. When DEMO_MODE=1, the login page shows the demo
+    # credentials so prospective clients can sign in. Off by default, so a
+    # real deployment never exposes them.
+    DEMO_MODE = os.environ.get("DEMO_MODE") == "1"
+
 
 class DevelopmentConfig(BaseConfig):
     DEBUG = True

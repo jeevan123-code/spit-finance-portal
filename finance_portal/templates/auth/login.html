@@ -53,9 +53,23 @@
         <button class="btn btn-primary btn-block" type="submit" style="margin-top:6px">Sign In</button>
       </form>
 
+      {% if demo_mode %}
+      <div class="demo-box">
+        <b>Demo accounts</b>
+        <table>
+          <tr><td>Committee</td><td>committee@spit.ac.in</td></tr>
+          <tr><td>Finance Secretary</td><td>finance@spit.ac.in</td></tr>
+          <tr><td>Associate Dean</td><td>assocdean@spit.ac.in</td></tr>
+          <tr><td>Dean</td><td>dean@spit.ac.in</td></tr>
+        </table>
+        <span class="dim">Password — Committee@SPIT26 · Finance@SPIT26 · AssocDean@SPIT26 · Dean@SPIT26</span>
+        <p class="dim" style="margin:8px 0 0">Tip: sign in as Committee, submit a budget, then approve it as Finance Secretary to see the workflow.</p>
+      </div>
+      {% else %}
       <p class="dim center" style="font-size:12.5px;margin:26px 0 0">
         Access is restricted to authorised Student Council members.
       </p>
+      {% endif %}
     </div>
   </main>
 </div>

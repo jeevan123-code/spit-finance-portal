@@ -375,6 +375,13 @@ table.data tfoot td { border-top: 1px solid var(--hairline-2); border-bottom: no
 .auth-main { display: grid; place-items: center; padding: 40px; background: var(--surface); }
 .auth-form { width: min(380px, 100%); }
 .auth-title { font-size: 30px; font-weight: 600; letter-spacing: -0.03em; margin: 0; }
+.demo-box { margin-top: 24px; padding: 16px; border: 1px solid var(--hairline-2);
+  border-radius: var(--radius-sm); background: var(--surface-2); font-size: 12.5px; }
+.demo-box > b { display: block; font-size: 12px; color: var(--fg-secondary); margin-bottom: 8px; }
+.demo-box table { width: 100%; border-collapse: collapse; }
+.demo-box td { padding: 3px 0; color: var(--fg-secondary); }
+.demo-box td:last-child { text-align: right; color: var(--fg); font-variant-numeric: tabular-nums; }
+.demo-box span.dim { display: block; margin-top: 8px; font-size: 11px; word-break: break-word; }
 
 @media (max-width: 900px) {
   .auth-split { grid-template-columns: 1fr; }
